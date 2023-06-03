@@ -1,6 +1,6 @@
 <p align="center"><a href="https://verifast.com" target="_blank"><img src="https://raw.githubusercontent.com/rentify-admin/art/master/logo-type/5%20SVG/2%20RGB/1%20Full%20Color/logo-type-rgb-blue.svg" width="300"></a></p>
 
-## About Verifast
+## About VeriFast
 
 We deliver the industry’s only "One-Stop Shop" digital platform using multiple direct data sources, securely connecting consumers with the lenders, property owners and financial service providers delivering the high value verification solutions they want and need.
 
