@@ -6,6 +6,9 @@ on:
       environment:
         required: true
         type: string
+      python-version:
+        required: true
+        type: string
       lambda-url:
         required: true
         type: string
@@ -32,8 +35,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Zip Package
-        run: zip -rq lambda.zip lambda_function.py
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install pipenv
+        run: |
+          pip install pipenv
+
+      - name: Install dependencies
+        run: |
+          pipenv install --deploy --ignore-pipfile
+
+      - name: Package Lambda and dependencies
+        run: |
+          pipenv run pip freeze | xargs pip install --no-cache-dir -t .
+          zip -r lambda.zip . -x "*.git*" "*__pycache__*" "*venv*" "Pipfile*" "*.log" "*.yml" "*.md" ".editorconfig" "LICENSE" "NOTICE"
 
       - name: Deploy to Lambda
         uses: appleboy/lambda-action@master
