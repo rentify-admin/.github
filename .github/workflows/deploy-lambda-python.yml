@@ -62,6 +62,12 @@ jobs:
         run: |
           pipenv install --deploy --ignore-pipfile
 
+      - name: Generate requirements.txt
+        run: pipenv run pip freeze > requirements.txt
+
+      - name: Freeze and install dependencies
+        run: pip install -r requirements.txt -t .
+
       - name: Package Lambda and dependencies
         run: |
           pipenv run pip freeze | xargs pip install --no-cache-dir -t .
