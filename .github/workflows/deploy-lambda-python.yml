@@ -84,6 +84,11 @@ jobs:
             --s3-bucket ${{ secrets.S3_BUCKET }} \
             --s3-key ${{ secrets.FUNCTION_NAME }}/${{ needs.prepare.outputs.sha }}.zip
 
+      - name: Waiting for Lambda to update...
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ secrets.FUNCTION_NAME }}
+
       - name: Update Lambda Alias
         if: ${{ vars.VERSION_ALIAS }}
         run: |
