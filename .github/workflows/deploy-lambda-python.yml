@@ -46,11 +46,6 @@ jobs:
       url: ${{ inputs.lambda-url }}
     steps:
 
-      - name: Debug version-alias
-        run: |
-          echo "Version Alias: ${{ env.VERSION_ALIAS }}"
-          echo "Version Alias: ${{ vars.VERSION_ALIAS }}"
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -90,10 +85,10 @@ jobs:
             --s3-key ${{ secrets.FUNCTION_NAME }}/${{ needs.prepare.outputs.sha }}.zip
 
       - name: Update Lambda Alias
-        if: ${{ env.VERSION_ALIAS }}
+        if: ${{ vars.VERSION_ALIAS }}
         run: |
           version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
           aws lambda update-alias \
             --function-name ${{ secrets.FUNCTION_NAME }} \
-            --name ${{ env.VERSION_ALIAS }} \
+            --name ${{ vars.VERSION_ALIAS }} \
             --function-version $version
