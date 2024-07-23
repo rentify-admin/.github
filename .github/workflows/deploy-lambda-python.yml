@@ -12,9 +12,6 @@ on:
       lambda-url:
         required: true
         type: string
-      version-alias:
-        required: false
-        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -89,7 +86,7 @@ jobs:
 
       - name: Debug version-alias
         run: |
-          echo "Version Alias: ${{ vars.VERSION_ALIAS }}"
+          echo "Version Alias: ${{ env.VERSION_ALIAS }}"
 
       - name: Update Lambda Alias
         if: ${{ inputs.version-alias }}
