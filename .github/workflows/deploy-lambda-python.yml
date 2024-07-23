@@ -89,10 +89,10 @@ jobs:
           echo "Version Alias: ${{ env.VERSION_ALIAS }}"
 
       - name: Update Lambda Alias
-        if: ${{ inputs.version-alias }}
+        if: ${{ env.VERSION_ALIAS }}
         run: |
           version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
           aws lambda update-alias \
             --function-name ${{ secrets.FUNCTION_NAME }} \
-            --name ${{ inputs.version-alias }} \
+            --name ${{ env.VERSION_ALIAS }} \
             --function-version $version
