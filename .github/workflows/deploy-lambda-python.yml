@@ -89,7 +89,7 @@ jobs:
 
       - name: Debug version-alias
         run: |
-          echo "Version Alias: ${{ inputs.version-alias }}"
+          echo "Version Alias: ${{ vars.VERSION_ALIAS }}"
 
       - name: Update Lambda Alias
         if: ${{ inputs.version-alias }}
