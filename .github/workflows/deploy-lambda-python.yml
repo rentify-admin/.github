@@ -12,6 +12,9 @@ on:
       lambda-url:
         required: true
         type: string
+      version-alias:
+        required: false
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -23,8 +26,6 @@ on:
         required: true
       S3_BUCKET:
         required: true
-      VERSION_ALIAS:
-        required: false
 
 jobs:
 
@@ -72,10 +73,10 @@ jobs:
             --s3-key ${{ secrets.FUNCTION_NAME }}/${{ env.sha }}.zip
 
       - name: Update Lambda Alias
-        if: ${{ secrets.VERSION_ALIAS }}
+        if: ${{ inputs.version-alias }}
         run: |
           version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
           aws lambda update-alias \
             --function-name ${{ secrets.FUNCTION_NAME }} \
-            --name ${{ secrets.VERSION_ALIAS }} \
+            --name ${{ inputs.version-alias }} \
             --function-version $version
