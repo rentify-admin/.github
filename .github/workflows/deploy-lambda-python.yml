@@ -29,8 +29,20 @@ on:
 
 jobs:
 
+  prepare:
+    name: Prepare For Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.get-sha.outputs.SHA }}
+    steps:
+
+      -   name: Get SHA
+          id: get-sha
+          run: echo "SHA=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
+
   deploy:
     name: Deploy to Lambda
+    needs: [ prepare ]
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
@@ -63,14 +75,14 @@ jobs:
         run: echo "SHA=${GITHUB_SHA:0:8}" >> $GITHUB_ENV
 
       - name: Upload to S3
-        run: aws s3 cp lambda.zip s3://${{ secrets.S3_BUCKET }}/${{ secrets.FUNCTION_NAME }}/${{ env.sha }}.zip
+        run: aws s3 cp lambda.zip s3://${{ secrets.S3_BUCKET }}/${{ secrets.FUNCTION_NAME }}/${{ needs.prepare.outputs.sha }}.zip
 
       - name: Deploy to Lambda from S3
         run: |
           aws lambda update-function-code \
             --function-name ${{ secrets.FUNCTION_NAME }} \
             --s3-bucket ${{ secrets.S3_BUCKET }} \
-            --s3-key ${{ secrets.FUNCTION_NAME }}/${{ env.sha }}.zip
+            --s3-key ${{ secrets.FUNCTION_NAME }}/${{ needs.prepare.outputs.sha }}.zip
 
       - name: Update Lambda Alias
         if: ${{ inputs.version-alias }}
