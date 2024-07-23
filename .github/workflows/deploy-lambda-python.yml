@@ -87,6 +87,10 @@ jobs:
             --s3-bucket ${{ secrets.S3_BUCKET }} \
             --s3-key ${{ secrets.FUNCTION_NAME }}/${{ needs.prepare.outputs.sha }}.zip
 
+      - name: Debug version-alias
+        run: |
+          echo "Version Alias: ${{ inputs.version-alias }}"
+
       - name: Update Lambda Alias
         if: ${{ inputs.version-alias }}
         run: |
