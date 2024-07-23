@@ -21,6 +21,8 @@ on:
         required: true
       FUNCTION_NAME:
         required: true
+      S3_BUCKET:
+        required: true
       VERSION_ALIAS:
         required: false
 
@@ -53,18 +55,27 @@ jobs:
       - name: Package Lambda and dependencies
         run: |
           pipenv run pip freeze | xargs pip install --no-cache-dir -t .
-          zip -r lambda.zip . -x "*.git*" "*__pycache__*" "*venv*" "Pipfile*" "*.log" "*.yml" "*.md" ".editorconfig" "LICENSE" "NOTICE"
+          zip -r lambda.zip . -x "*.git*" "*__pycache__*" "*venv*" "Pipfile*" "*.log" "*.yml" "*.md" "*.editorconfig" "LICENSE" "NOTICE"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Get SHA
+        id: get-sha
+        run: echo "SHA=${GITHUB_SHA:0:8}" >> $GITHUB_ENV
 
-      - name: Deploy to Lambda
-        uses: int128/deploy-lambda-action@v1
-        with:
-          function-name: ${{ secrets.FUNCTION_NAME }}
-          zip-path: ./lambda.zip
-          alias-name: ${{ secrets.VERSION_ALIAS || '' }}
+      - name: Upload to S3
+        run: aws s3 cp lambda.zip s3://${{ secrets.S3_BUCKET }}/${{ secrets.FUNCTION_NAME }}/${{ env.sha }}.zip
+
+      - name: Deploy to Lambda from S3
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ secrets.FUNCTION_NAME }} \
+            --s3-bucket ${{ secrets.S3_BUCKET }} \
+            --s3-key ${{ secrets.FUNCTION_NAME }}/${{ env.sha }}.zip
+
+      - name: Update Lambda Alias
+        if: ${{ secrets.VERSION_ALIAS }}
+        run: |
+          version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
+          aws lambda update-alias \
+            --function-name ${{ secrets.FUNCTION_NAME }} \
+            --name ${{ secrets.VERSION_ALIAS }} \
+            --function-version $version
