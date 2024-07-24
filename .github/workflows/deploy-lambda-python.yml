@@ -105,3 +105,22 @@ jobs:
               --name ${{ vars.VERSION_ALIAS }} \
               --function-version $version
           fi
+
+      - name: Update or Create Lambda Alias
+        if: ${{ vars.VERSION_ALIAS }}
+        run: |
+          version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
+          alias_exists=$(aws lambda get-alias --function-name ${{ secrets.FUNCTION_NAME }} --name ${{ vars.VERSION_ALIAS }} 2>&1 || true)
+          if echo "$alias_exists" | grep -q 'ResourceNotFoundException'; then
+            echo "Creating new alias"
+            aws lambda create-alias \
+              --function-name ${{ secrets.FUNCTION_NAME }} \
+              --name ${{ vars.VERSION_ALIAS }} \
+              --function-version $version
+          else
+            echo "Updating existing alias"
+            aws lambda update-alias \
+              --function-name ${{ secrets.FUNCTION_NAME }} \
+              --name ${{ vars.VERSION_ALIAS }} \
+              --function-version $version
+          fi
