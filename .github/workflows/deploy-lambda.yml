@@ -3,11 +3,11 @@ name: Deploy to Lambda
 on:
   workflow_call:
     inputs:
-      sha:
+      environment:
         required: true
         type: string
-      version-alias:
-        required: false
+      sha:
+        required: true
         type: string
     secrets:
       AWS_ACCESS_KEY_ID:
@@ -25,6 +25,7 @@ jobs:
   deploy:
     name: Deploy to Lambda
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     steps:
 
       - name: Download Artifact
@@ -55,18 +56,18 @@ jobs:
             --function-name ${{ secrets.FUNCTION_NAME }}
 
       - name: Update or Create Lambda Alias
-        if: ${{ inputs.version-alias }}
+        if: ${{ vars.VERSION_ALIAS }}
         run: |
           version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
-          alias_exists=$(aws lambda get-alias --function-name ${{ secrets.FUNCTION_NAME }} --name ${{ inputs.version-alias }} 2>&1 || true)
+          alias_exists=$(aws lambda get-alias --function-name ${{ secrets.FUNCTION_NAME }} --name ${{ vars.VERSION_ALIAS }} 2>&1 || true)
           if echo "$alias_exists" | grep -q 'ResourceNotFoundException'; then
             aws lambda create-alias \
               --function-name ${{ secrets.FUNCTION_NAME }} \
-              --name ${{ inputs.version-alias }} \
+              --name ${{ vars.VERSION_ALIAS }} \
               --function-version $version
           else
             aws lambda update-alias \
               --function-name ${{ secrets.FUNCTION_NAME }} \
-              --name ${{ inputs.version-alias }} \
+              --name ${{ vars.VERSION_ALIAS }} \
               --function-version $version
           fi

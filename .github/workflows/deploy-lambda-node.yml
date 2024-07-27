@@ -62,6 +62,6 @@ jobs:
     needs: [ prepare ]
     uses: rentify-admin/.github/.github/workflows/deploy-lambda.yml@master
     with:
+      environment: ${{ inputs.environment }}
       sha: ${{ needs.prepare.outputs.sha }}
-      version-alias: ${{ vars.VERSION_ALIAS }}
     secrets: inherit
