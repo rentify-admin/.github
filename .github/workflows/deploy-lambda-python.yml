@@ -12,17 +12,18 @@ on:
       lambda-url:
         required: true
         type: string
+      aws-region:
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      AWS_REGION:
-        required: true
       FUNCTION_NAME:
         required: true
       S3_BUCKET:
-        required: true
+        required: false
 
 jobs:
 
@@ -71,4 +72,5 @@ jobs:
     with:
       environment: ${{ inputs.environment }}
       sha: ${{ needs.prepare.outputs.sha }}
+      aws-region: ${{ inputs.aws-region }}
     secrets: inherit
