@@ -98,16 +98,10 @@ jobs:
           aws lambda wait function-updated \
             --function-name ${{ secrets.FUNCTION_NAME }}
 
-      - name: Publish New Version and Update Alias
+      - name: Update or Create Lambda Alias
         if: ${{ vars.VERSION_ALIAS }}
         run: |
           version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
-
-          aws lambda update-function-configuration \
-            --function-name ${{ secrets.FUNCTION_NAME }} \
-            --qualifier $version \
-            --environment "Variables={GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}}"
-
           alias_exists=$(aws lambda get-alias --function-name ${{ secrets.FUNCTION_NAME }} --name ${{ vars.VERSION_ALIAS }} 2>&1 || true)
           if echo "$alias_exists" | grep -q 'ResourceNotFoundException'; then
             aws lambda create-alias \
