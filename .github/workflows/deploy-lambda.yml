@@ -19,6 +19,8 @@ on:
         required: true
       FUNCTION_NAME:
         required: true
+      LAMBDA_BUCKET:
+        required: false
       S3_BUCKET:
         required: false
 
@@ -62,12 +64,13 @@ jobs:
       - name: Check if S3 bucket exists
         id: bucket-exists-check
         run: |
-          bucket_region=$(aws s3api get-bucket-location --bucket "${{ secrets.LAMBDA_BUCKET || secrets.S3_BUCKET }}" --output text)
-          
+          bucket_region=$(aws s3api get-bucket-location \
+            --bucket "${{ secrets.LAMBDA_BUCKET || secrets.S3_BUCKET }}" --output text)
+
           if [[ "$bucket_region" == "None" ]]; then
             bucket_region="us-east-1"
           fi
-          
+
           if [[ "$bucket_region" == "${{ matrix.region }}" ]]; then
             echo "BUCKET_EXISTS=true" >> $GITHUB_ENV
           else
@@ -76,7 +79,9 @@ jobs:
 
       - name: Upload to S3
         if: env.BUCKET_EXISTS == 'true'
-        run: aws s3 cp lambda.zip s3://${{ secrets.LAMBDA_BUCKET || secrets.S3_BUCKET }}/${{ secrets.FUNCTION_NAME }}/${{ inputs.sha }}.zip
+        run: |
+          aws s3 cp lambda.zip \
+            "s3://${{ secrets.LAMBDA_BUCKET || secrets.S3_BUCKET }}/${{ secrets.FUNCTION_NAME }}/${{ inputs.sha }}.zip"
 
       - name: Deploy to Lambda from S3
         if: env.BUCKET_EXISTS == 'true'
@@ -84,14 +89,14 @@ jobs:
           aws lambda update-function-code \
             --function-name ${{ secrets.FUNCTION_NAME }} \
             --s3-bucket ${{ secrets.LAMBDA_BUCKET || secrets.S3_BUCKET }} \
-            --s3-key ${{ secrets.FUNCTION_NAME }}/${{ inputs.sha }}.zip \
+            --s3-key ${{ secrets.FUNCTION_NAME }}/${{ inputs.sha }}.zip
 
       - name: Deploy to Lambda from Zip File
         if: env.BUCKET_EXISTS == 'false'
         run: |
           aws lambda update-function-code \
             --function-name ${{ secrets.FUNCTION_NAME }} \
-            --zip-file fileb://lambda.zip \
+            --zip-file fileb://lambda.zip
 
       - name: Wait for Lambda update to complete
         run: |
@@ -101,8 +106,11 @@ jobs:
       - name: Update or Create Lambda Alias
         if: ${{ vars.VERSION_ALIAS }}
         run: |
-          version=$(aws lambda publish-version --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
-          alias_exists=$(aws lambda get-alias --function-name ${{ secrets.FUNCTION_NAME }} --name ${{ vars.VERSION_ALIAS }} 2>&1 || true)
+          version=$(aws lambda publish-version \
+            --function-name ${{ secrets.FUNCTION_NAME }} --query 'Version' --output text)
+          alias_exists=$(aws lambda get-alias \
+            --function-name ${{ secrets.FUNCTION_NAME }} \
+            --name ${{ vars.VERSION_ALIAS }} 2>&1 || true)
           if echo "$alias_exists" | grep -q 'ResourceNotFoundException'; then
             aws lambda create-alias \
               --function-name ${{ secrets.FUNCTION_NAME }} \

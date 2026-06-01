@@ -57,7 +57,8 @@ jobs:
       - name: Package Lambda and dependencies
         run: |
           pipenv run pip freeze | xargs pip install --no-cache-dir -t .
-          zip -r lambda.zip . -x "*.git*" "*__pycache__*" "*venv*" "Pipfile*" "*.log" "*.yml" "*.md" "*.editorconfig" "LICENSE" "NOTICE"
+          zip -r lambda.zip . \
+            -x "*.git*" "*__pycache__*" "*venv*" "Pipfile*" "*.log" "*.yml" "*.md" "*.editorconfig" "LICENSE" "NOTICE"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
